@@ -1,0 +1,42 @@
+# macOS
+.DS_Store
+
+# Go build artifacts
+/bin/
+/build/
+/dist/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+
+# Go workspace file
+go.work
+go.work.sum
+
+# Dependency directories (vendor/)
+vendor/
+
+# IDE/editor files
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log
+
+# Coverage files
+*.coverprofile
+*.cov
+coverage.out
+
+# Test binary output
+*.test
+
+# Temporary files
+*.tmp
+*.temp
