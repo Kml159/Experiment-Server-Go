@@ -11,6 +11,7 @@ const (
     product = 1e3
 )
 
+
 type Parameter struct {
     ID                   string // 4234234320000x0
     GenerationLimit      int
@@ -33,7 +34,7 @@ func (p Parameter) Print() {
     )
 }
 
-func GenerateParamCombinations(duplicate int) []Parameter {
+func GenerateParamCombinations(duplicate int) map[string]Parameter {
     populationSizes := []int{500}
     procreatorRatios := []float64{0.2}
     kClosestCs := []int{3}
@@ -98,12 +99,12 @@ func GenerateParamCombinations(duplicate int) []Parameter {
         finalCombinations = append(finalCombinations, param)
     }
 
-    duplicated := make([]Parameter, 0, len(finalCombinations)*duplicate)
+    duplicated := make(map[string]Parameter)
     for _, combination := range finalCombinations {
         for i := 0; i < duplicate; i++ {
             dup := combination
             dup.ID = combination.ID + fmt.Sprint(i)
-            duplicated = append(duplicated, dup)
+            duplicated[dup.ID] = dup
         }
     }
 

@@ -3,15 +3,18 @@ package handlers
 import (
 	"encoding/json"
 	"experiment-server/internal/config"
-	"experiment-server/internal/models/client"
-	"experiment-server/internal/records/clients"
+	"experiment-server/internal/dto/experiment"
 	"experiment-server/internal/dto/register"
+	"experiment-server/internal/models/client"
+	"experiment-server/internal/models/parameter"
+	"experiment-server/internal/records/clients"
+	"experiment-server/internal/records/experiments"
 	"fmt"
 	"net/http"
 )
 
 func HomeHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintln(w, "Hello, World! This is the Go net/http server template.")
+	fmt.Fprintln(w, "Hello, World!")
 }
 
 func RegisterHandler(w http.ResponseWriter, r *http.Request) {
@@ -54,6 +57,16 @@ func GetExperimentHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	clients.Activate(r.RemoteAddr)
+	experiment := experiments.Subcribe()
 
-	// TODO
+	
+
+}
+
+func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func UploadFileHandler(w http.ResponseWriter, r *http.Request) {
+
 }

@@ -77,3 +77,32 @@ func Contains(key string) bool {
 	_, ok := byAddress[key]
 	return ok
 }
+
+func AppendActiveExperiment(ClientAddress string, ExperimentId string) error {
+	mu.Lock()
+	defer mu.Unlock()
+	client, ok := byAddress[ClientAddress]
+	if !ok{
+		return fmt.Errorf("Client Address does not exists: " + ClientAddress)
+	}
+	client.ActiveExperimentIDs = append(client.ActiveExperimentIDs, ExperimentId)
+	return nil
+}
+
+func RemoveActiveExperiment(ClientAddress string, ExperimentId string) error {
+    mu.Lock()
+    defer mu.Unlock()
+    client, ok := byAddress[ClientAddress]
+    if !ok {
+        return fmt.Errorf("client Address does not exist: %s", ClientAddress)
+    }
+    ids := client.ActiveExperimentIDs
+    for i, id := range ids {
+        if id == ExperimentId {
+            client.ActiveExperimentIDs = append(ids[:i], ids[i+1:]...)
+			client.CompletedExperimentIDs = append(client.CompletedExperimentIDs, ExperimentId)
+            return nil
+        }
+    }
+    return fmt.Errorf("experiment ID not found: %s", ExperimentId)
+}
