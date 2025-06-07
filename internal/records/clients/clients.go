@@ -4,6 +4,7 @@ import (
 	"experiment-server/internal/models/client"
 	"fmt"
 	"sync"
+	"time"
 )
 
 var (
@@ -105,4 +106,16 @@ func RemoveActiveExperiment(ClientAddress string, ExperimentId string) error {
         }
     }
     return fmt.Errorf("experiment ID not found: %s", ExperimentId)
+}
+
+func Update(ClientAddress string, client *client.Client) error {
+	mu.Lock()
+	defer mu.Unlock()
+	_, ok := byAddress[ClientAddress]
+    if !ok {
+        return fmt.Errorf("client Address does not exist: %s", ClientAddress)
+    }
+	client.LastStatusReceived = time.Now()
+	byAddress[ClientAddress] = client
+	return nil
 }

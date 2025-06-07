@@ -4,18 +4,14 @@ import (
 	"log"
 	"net/http"
 
-	"experiment-server/internal/config"
-	"experiment-server/internal/models/status"
 	"experiment-server/internal/routes"
 )
 
 func main() {
-	cfg := config.Load()
-	router := routes.NewRouter()
-	status.ServerStatus.Print()
+    log.SetFlags(log.LstdFlags | log.Lmicroseconds | log.Lshortfile)
+    log.Println("Verbose logging ENABLED")
 
-	log.Printf("Server starting on %s...", cfg.ServerAddress)
-	if err := http.ListenAndServe(cfg.ServerAddress, router); err != nil {
-		log.Fatalf("Server failed: %v", err)
-	}
+    router := routes.NewRouter()
+    log.Printf("Server starting on http://%s", "localhost:8080")
+    log.Fatal(http.ListenAndServe("localhost:8080", router))
 }
