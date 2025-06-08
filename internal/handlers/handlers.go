@@ -68,7 +68,7 @@ func GetExperimentHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(experiment)
+	json.NewEncoder(w).Encode(*experiment)
 }
 
 func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
@@ -109,7 +109,8 @@ func UploadFileHandler(w http.ResponseWriter, r *http.Request) {
         http.Error(w, "Invalid file name format", http.StatusBadRequest)
         return
     }
-    expID := strings.TrimSuffix(strings.Split(parts[1], ".")[0], "")
+
+    ExperimentId := strings.TrimSuffix(strings.Split(parts[1], ".")[0], "")
 
     clientObj, err := clients.Get(r.RemoteAddr)
     if err != nil {
@@ -118,7 +119,7 @@ func UploadFileHandler(w http.ResponseWriter, r *http.Request) {
     }
 
     for _, id := range clientObj.CompletedExperimentIDs {
-        if id == expID {
+        if id == ExperimentId {
             w.WriteHeader(http.StatusOK)
             json.NewEncoder(w).Encode(map[string]string{"status": "File already received"})
             return
@@ -142,9 +143,13 @@ func UploadFileHandler(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    if err := clients.RemoveActiveExperiment(r.RemoteAddr, expID); err != nil {
-        fmt.Printf("Error moving experiment ID %s: %v\n", expID, err)
+    if err := clients.RemoveActiveExperiment(r.RemoteAddr, ExperimentId); err != nil {
+        fmt.Printf("Error moving experiment ID %s: %v\n", ExperimentId, err)
     }
+
+	if err := experiments.Completed(ExperimentId); err != nil{
+		fmt.Println("Error on marking experiment as done!")
+	}
 
     w.WriteHeader(http.StatusOK)
     json.NewEncoder(w).Encode(map[string]string{"status": "File received"})

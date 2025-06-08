@@ -12,32 +12,57 @@ const (
 
 var (
 	mu           sync.Mutex
-	unsubscribed = make(map[string]parameter.Parameter)
-	experiments  = make(map[string]parameter.Parameter)
+	experiments  map[string]parameter.Parameter
+	unsubscribed map[string]*parameter.Parameter
+	completed 	 map[string]*parameter.Parameter
 )
-
-func Add(param parameter.Parameter) error {
-	mu.Lock()
-	defer mu.Unlock()
-	unsubscribed[param.ID] = param
-	return nil
-}
 
 func init(){
 	experiments = parameter.GenerateParamCombinations(duplicate)
 	fmt.Println("Generated experiment parameters:")
-	for _, p := range experiments{
+	for key, p := range experiments{
+		unsubscribed[key] = &p
 		p.Print()
 	}
-	unsubscribed = experiments
+	unsubscribed = make(map[string]*parameter.Parameter, len(experiments))
+	completed = make(map[string]*parameter.Parameter, len(experiments))
 }
 
-func Subcribe() *parameter.Parameter {
+func Add(param parameter.Parameter) error {
+	mu.Lock()
+	defer mu.Unlock()
+	_, ok := experiments[param.ID]
+	if !ok{
+		experiments[param.ID] = param
+	}
+	unsubscribed[param.ID] = &param
+	return nil
+}
+
+func Subcribe() *parameter.Parameter { 
     mu.Lock()
     defer mu.Unlock()
     for id, param := range unsubscribed {
         delete(unsubscribed, id)
-        return &param
+        return param
     }
     return nil 
+}
+
+func Completed(key string) error {
+    mu.Lock()
+    defer mu.Unlock()
+
+    exp, ok := experiments[key]
+    if !ok {
+        return fmt.Errorf("experiment %q not found", key)
+    }
+    completed[key] = &exp
+    return nil
+}
+
+func IsDone() bool { 
+	mu.Lock()
+	defer mu.Unlock()
+	return len(completed) >= len(experiments)
 }
