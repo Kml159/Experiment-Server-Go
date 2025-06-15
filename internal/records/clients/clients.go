@@ -41,6 +41,12 @@ func Stats() {
 	fmt.Println("Total Clients:", total, "\tActive:", active, "\tInactive:", total-active)
 }
 
+func Count() int {
+	mu.Lock()
+	defer mu.Unlock()
+	return len(byAddress)
+}
+
 // TODO: fix
 func Deactivate(key string) error {
 	mu.Lock()
@@ -83,7 +89,7 @@ func AppendActiveExperiment(ClientAddress string, ExperimentId string) error {
 	mu.Lock()
 	defer mu.Unlock()
 	client, ok := byAddress[ClientAddress]
-	if !ok{
+	if !ok {
 		return fmt.Errorf("Client Address does not exists: " + ClientAddress)
 	}
 	client.ActiveExperimentIDs = append(client.ActiveExperimentIDs, ExperimentId)
@@ -91,31 +97,41 @@ func AppendActiveExperiment(ClientAddress string, ExperimentId string) error {
 }
 
 func RemoveActiveExperiment(ClientAddress string, ExperimentId string) error {
-    mu.Lock()
-    defer mu.Unlock()
-    client, ok := byAddress[ClientAddress]
-    if !ok {
-        return fmt.Errorf("client Address does not exist: %s", ClientAddress)
-    }
-    ids := client.ActiveExperimentIDs
-    for i, id := range ids {
-        if id == ExperimentId {
-            client.ActiveExperimentIDs = append(ids[:i], ids[i+1:]...)
+	mu.Lock()
+	defer mu.Unlock()
+	client, ok := byAddress[ClientAddress]
+	if !ok {
+		return fmt.Errorf("client Address does not exist: %s", ClientAddress)
+	}
+	ids := client.ActiveExperimentIDs
+	for i, id := range ids {
+		if id == ExperimentId {
+			client.ActiveExperimentIDs = append(ids[:i], ids[i+1:]...)
 			client.CompletedExperimentIDs = append(client.CompletedExperimentIDs, ExperimentId)
-            return nil
-        }
-    }
-    return fmt.Errorf("experiment ID not found: %s", ExperimentId)
+			return nil
+		}
+	}
+	return fmt.Errorf("experiment ID not found: %s", ExperimentId)
 }
 
 func Update(ClientAddress string, client *client.Client) error {
 	mu.Lock()
 	defer mu.Unlock()
 	_, ok := byAddress[ClientAddress]
-    if !ok {
-        return fmt.Errorf("client Address does not exist: %s", ClientAddress)
-    }
+	if !ok {
+		return fmt.Errorf("client Address does not exist: %s", ClientAddress)
+	}
 	client.LastStatusReceived = time.Now()
 	byAddress[ClientAddress] = client
 	return nil
+}
+
+func Clients() []client.Client {
+	mu.Lock()
+	defer mu.Unlock()
+	clients := make([]client.Client, 0, len(byAddress))
+	for _, c := range byAddress {
+		clients = append(clients, *c)
+	}
+	return clients
 }

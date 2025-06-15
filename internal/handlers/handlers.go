@@ -86,45 +86,45 @@ func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 
 	client.ComputerAddress = r.RemoteAddr
 	clients.Update(r.RemoteAddr, &client)
-	
-    fmt.Println("[" + time.Now().Format(time.RFC3339) + "]", "Status Updated: [" + r.RemoteAddr + "]", )
+
+	fmt.Println("["+time.Now().Format(time.RFC3339)+"]", "Status Updated: ["+r.RemoteAddr+"]")
 }
 
 func UploadFileHandler(w http.ResponseWriter, r *http.Request) {
-    if r.Method != http.MethodPost {
-        http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-        return
-    }
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
 
-    var file output.Output
-    if err := json.NewDecoder(r.Body).Decode(&file); err != nil {
-        http.Error(w, "Invalid request body", http.StatusBadRequest)
-        return
-    }
+	var file output.Output
+	if err := json.NewDecoder(r.Body).Decode(&file); err != nil {
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
+	}
 
-    fmt.Println("Received file:", file.FileName)
+	fmt.Println("Received file:", file.FileName)
 
-    parts := strings.Split(file.FileName, "_")
-    if len(parts) < 2 {
-        http.Error(w, "Invalid file name format", http.StatusBadRequest)
-        return
-    }
+	parts := strings.Split(file.FileName, "_")
+	if len(parts) < 2 {
+		http.Error(w, "Invalid file name format", http.StatusBadRequest)
+		return
+	}
 
-    ExperimentId := strings.TrimSuffix(strings.Split(parts[1], ".")[0], "")
+	ExperimentId := strings.TrimSuffix(strings.Split(parts[1], ".")[0], "")
 
-    clientObj, err := clients.Get(r.RemoteAddr)
-    if err != nil {
-        http.Error(w, "Client not registered", http.StatusUnauthorized)
-        return
-    }
+	clientObj, err := clients.Get(r.RemoteAddr)
+	if err != nil {
+		http.Error(w, "Client not registered", http.StatusUnauthorized)
+		return
+	}
 
-    for _, id := range clientObj.CompletedExperimentIDs {
-        if id == ExperimentId {
-            w.WriteHeader(http.StatusOK)
-            json.NewEncoder(w).Encode(map[string]string{"status": "File already received"})
-            return
-        }
-    }
+	for _, id := range clientObj.CompletedExperimentIDs {
+		if id == ExperimentId {
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(map[string]string{"status": "File already received"})
+			return
+		}
+	}
 
 	data, err := base64.StdEncoding.DecodeString(file.FileData)
 	if err != nil {
@@ -132,25 +132,25 @@ func UploadFileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-    if err := os.MkdirAll("received_output", 0755); err != nil {
-        http.Error(w, "Failed to create output directory", http.StatusInternalServerError)
-        return
-    }
-	
-    outputPath := filepath.Join("received_output", file.FileName)
-    if err := os.WriteFile(outputPath, data, 0644); err != nil {
-        http.Error(w, "Failed to write file", http.StatusInternalServerError)
-        return
-    }
+	if err := os.MkdirAll("received_output", 0755); err != nil {
+		http.Error(w, "Failed to create output directory", http.StatusInternalServerError)
+		return
+	}
 
-    if err := clients.RemoveActiveExperiment(r.RemoteAddr, ExperimentId); err != nil {
-        fmt.Printf("Error moving experiment ID %s: %v\n", ExperimentId, err)
-    }
+	outputPath := filepath.Join("received_output", file.FileName)
+	if err := os.WriteFile(outputPath, data, 0644); err != nil {
+		http.Error(w, "Failed to write file", http.StatusInternalServerError)
+		return
+	}
 
-	if err := experiments.Completed(ExperimentId); err != nil{
+	if err := clients.RemoveActiveExperiment(r.RemoteAddr, ExperimentId); err != nil {
+		fmt.Printf("Error moving experiment ID %s: %v\n", ExperimentId, err)
+	}
+
+	if err := experiments.Completed(ExperimentId); err != nil {
 		fmt.Println("Error on marking experiment as done!")
 	}
 
-    w.WriteHeader(http.StatusOK)
-    json.NewEncoder(w).Encode(map[string]string{"status": "File received"})
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(map[string]string{"status": "File received"})
 }
