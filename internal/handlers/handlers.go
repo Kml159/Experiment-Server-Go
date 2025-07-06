@@ -65,13 +65,12 @@ func GetExperimentHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		http.Error(w, "Client is not registered", http.StatusUnauthorized)
 		fmt.Printf("Unauthorized access attempt from %s: %v\n", r.RemoteAddr, err)
-		os.Exit(0)
 	}
 
 	address := strings.Split(r.RemoteAddr, ":")[0]
 	clients.Activate(address)
 	experiment := experiments.Subcribe()
-	
+
 	if experiment == nil {
 		http.Error(w, "No experiments available", http.StatusNotFound)
         return
