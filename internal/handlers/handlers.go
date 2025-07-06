@@ -32,6 +32,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	var client client.Client
 	err := json.NewDecoder(r.Body).Decode(&client)
+	client.ComputerAddress = strings.Split(r.RemoteAddr, ":")[0]
 	if err != nil {
 		message := "Invalid request body"
 		fmt.Println(message)
@@ -45,6 +46,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	response := register.RegisterResponse{
 		Status:       "Successful",
 		ThreadAmount: config.ThreadAmount,
+		ClientSendUpdateStatusInSeconds: config.ClientSendUpdateStatusInSeconds,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -56,15 +58,26 @@ func GetExperimentHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
 	}
 
-	_, err := clients.Get(r.RemoteAddr)
+	_, err := clients.Get(strings.Split(r.RemoteAddr, ":")[0])
 	if err != nil {
-		http.Error(w, "Client is not registered", http.StatusExpectationFailed)
+		http.Error(w, "Client is not registered", http.StatusUnauthorized)
+		fmt.Printf("Unauthorized access attempt from %s: %v\n", r.RemoteAddr, err)
+		os.Exit(0)
 	}
 
-	clients.Activate(r.RemoteAddr)
+	address := strings.Split(r.RemoteAddr, ":")[0]
+	clients.Activate(address)
 	experiment := experiments.Subcribe()
+	
+	if experiment == nil {
+		http.Error(w, "No experiments available", http.StatusNotFound)
+        return
+    }
+	
+	clients.AppendActiveExperiment(address, experiment.ID)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -84,10 +97,10 @@ func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client.ComputerAddress = r.RemoteAddr
-	clients.Update(r.RemoteAddr, &client)
+	client.ComputerAddress = strings.Split(r.RemoteAddr, ":")[0]
+	clients.Update(strings.Split(r.RemoteAddr, ":")[0], &client)
 
-	fmt.Println("["+time.Now().Format(time.RFC3339)+"]", "Status Updated: ["+r.RemoteAddr+"]")
+	fmt.Println("["+time.Now().Format(time.RFC3339)+"]", "Status Updated: ["+strings.Split(r.RemoteAddr, ":")[0]+"]")
 }
 
 func UploadFileHandler(w http.ResponseWriter, r *http.Request) {
@@ -112,7 +125,7 @@ func UploadFileHandler(w http.ResponseWriter, r *http.Request) {
 
 	ExperimentId := strings.TrimSuffix(strings.Split(parts[1], ".")[0], "")
 
-	clientObj, err := clients.Get(r.RemoteAddr)
+	clientObj, err := clients.Get(strings.Split(r.RemoteAddr, ":")[0])
 	if err != nil {
 		http.Error(w, "Client not registered", http.StatusUnauthorized)
 		return
@@ -143,7 +156,7 @@ func UploadFileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := clients.RemoveActiveExperiment(r.RemoteAddr, ExperimentId); err != nil {
+	if err := clients.RemoveActiveExperiment(strings.Split(r.RemoteAddr, ":")[0], ExperimentId); err != nil {
 		fmt.Printf("Error moving experiment ID %s: %v\n", ExperimentId, err)
 	}
 

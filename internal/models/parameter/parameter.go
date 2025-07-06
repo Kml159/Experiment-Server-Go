@@ -11,65 +11,76 @@ const (
 	product = 1e3
 )
 
+// Arguments needed to run the program:
+
 type Parameter struct {
-	ID                   string // 4234234320000x0
-	GenerationLimit      int
-	PopulationSize       int
-	ProcreatorSize       int
-	DeviationEraInterval int
-	KClosestCs           int
-	A                    int
-	B                    int
-	EtaAr                int
-	GammaAr              int
-	GammaMgr             float64
-	DatasetIndex         int
+	ID                   string  `json:"id"`
+	GenerationLimit      int     `json:"generation_limit"`
+	PopulationSize       int     `json:"population_size"`
+	KClosestCsPercantage float32 `json:"k_closest_cs_percantage"` // 1.0 always // 3. M_K_CLOSEST_CHARGE_STATIONS_TO_CS_AMOUNT_RATIO: Ratio for closest charge stations.
+	A                    int     `json:"A"`
+	B                    int     `json:"B"`
+	EtaAr                int     `json:"eta_ar"`
+	GammaAr              int     `json:"gamma_ar"`
+	GammaMgr             float64 `json:"gamma_mgr"`
+	DistanceMethod       int     `json:"distance_method"`
+	DeviatonEraParameter int 	 `json:"deviation_era_parameter"`
+	DatasetIndex         int     `json:"dataset_index"`
 }
 
 func (p Parameter) Print() {
-	fmt.Printf(
-		"Parameter{ID: %s, GenerationLimit: %d, PopulationSize: %d, ProcreatorSize: %d, DeviationEraInterval: %d, KClosestCs: %d, A: %d, B: %d, EtaAr: %d, GammaAr: %d, GammaMgr: %.2f, DatasetIndex: %d}\n",
-		p.ID, p.GenerationLimit, p.PopulationSize, p.ProcreatorSize, p.DeviationEraInterval, p.KClosestCs, p.A, p.B, p.EtaAr, p.GammaAr, p.GammaMgr, p.DatasetIndex,
-	)
+    fmt.Printf(
+        "Parameter{ID: %s, GenerationLimit: %d, PopulationSize: %d, KClosestCsPercantage: %f, A: %d, B: %d, EtaAr: %d, GammaAr: %d, GammaMgr: %.2f, DistanceMethod: %d, DeviatonEraParameter: %d, DatasetIndex: %d}\n",
+        p.ID, p.GenerationLimit, p.PopulationSize, p.KClosestCsPercantage, p.A, p.B, p.EtaAr, p.GammaAr, p.GammaMgr, p.DistanceMethod, p.DeviatonEraParameter, p.DatasetIndex,
+    )
 }
 
+func (p Parameter) String() string {
+    return fmt.Sprintf("Parameter{ID: %s, GenerationLimit: %d, PopulationSize: %d, KClosestCsPercantage: %f, A: %d, B: %d, EtaAr: %d, GammaAr: %d, GammaMgr: %.2f, DistanceMethod: %d, DeviatonEraParameter: %d, DatasetIndex: %d}\n",
+        p.ID, p.GenerationLimit, p.PopulationSize, p.KClosestCsPercantage, p.A, p.B, p.EtaAr, p.GammaAr, p.GammaMgr, p.DistanceMethod, p.DeviatonEraParameter, p.DatasetIndex)
+}
 func GenerateParamCombinations(duplicate int) map[string]Parameter {
+
 	populationSizes := []int{500}
-	procreatorRatios := []float64{0.2}
-	kClosestCs := []int{3}
+	kClosestCs := []float32{1.0}
 	etaArs := []int{400}
 	gammaArs := []int{10}
 	gammaMgrs := []float64{0.9}
 	datasetIndexes := []int{0}
 	AnB := [][2]int{{1, 1}}
+	DistanceMethod := [2]int{0, 1}
+	DeviationEraParameter := []int{30}
 
 	rand.Seed(time.Now().UnixNano())
 	ExperimentSessionID := rand.Intn(100000) * 10000
 
 	type combo struct {
 		pop    int
-		ratio  float64
-		k      int
+		k      float32
 		eta    int
 		gammaA int
 		gammaM float64
 		dset   int
 		a      int
 		b      int
+		dm     int
+		devEra int
 	}
 
 	var combos []combo
 	for _, pop := range populationSizes {
-		for _, ratio := range procreatorRatios {
-			for _, k := range kClosestCs {
-				for _, eta := range etaArs {
-					for _, gammaA := range gammaArs {
-						for _, gammaM := range gammaMgrs {
-							for _, dset := range datasetIndexes {
-								for _, ab := range AnB {
-									combos = append(combos, combo{
-										pop, ratio, k, eta, gammaA, gammaM, dset, ab[0], ab[1],
-									})
+		for _, k := range kClosestCs {
+			for _, eta := range etaArs {
+				for _, gammaA := range gammaArs {
+					for _, gammaM := range gammaMgrs {
+						for _, dset := range datasetIndexes {
+							for _, ab := range AnB {
+								for _, dm := range DistanceMethod { // Add this loop
+									for _, devEra := range DeviationEraParameter{
+										combos = append(combos, combo{
+											pop, k, eta, gammaA, gammaM, dset, ab[0], ab[1], dm, devEra,
+										})
+									}
 								}
 							}
 						}
@@ -85,15 +96,14 @@ func GenerateParamCombinations(duplicate int) map[string]Parameter {
 			ID:                   fmt.Sprint(ExperimentSessionID*base) + "x" + fmt.Sprint(expSetID),
 			GenerationLimit:      int(product / float64(c.pop)),
 			PopulationSize:       c.pop,
-			ProcreatorSize:       int(float64(c.pop) * c.ratio),
-			DeviationEraInterval: int((product / float64(c.pop)) * 0.01),
-			KClosestCs:           c.k,
+			KClosestCsPercantage: c.k,
 			A:                    c.a,
 			B:                    c.b,
 			EtaAr:                c.eta,
 			GammaAr:              c.gammaA,
 			GammaMgr:             c.gammaM,
 			DatasetIndex:         c.dset,
+			DeviatonEraParameter: c.devEra,
 		}
 		finalCombinations = append(finalCombinations, param)
 	}

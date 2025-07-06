@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	duplicate = 5
+	duplicate = 80
 )
 
 var (
@@ -19,13 +19,14 @@ var (
 
 func init() {
 	experiments = parameter.GenerateParamCombinations(duplicate)
+	unsubscribed = make(map[string]*parameter.Parameter, len(experiments))
+	completed = make(map[string]*parameter.Parameter, len(experiments))
 	fmt.Println("Generated experiment parameters:")
 	for key, p := range experiments {
 		unsubscribed[key] = &p
 		p.Print()
 	}
-	unsubscribed = make(map[string]*parameter.Parameter, len(experiments))
-	completed = make(map[string]*parameter.Parameter, len(experiments))
+	fmt.Print("\n")
 }
 
 func UnsubscribedCount() int {

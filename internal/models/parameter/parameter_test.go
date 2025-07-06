@@ -33,18 +33,18 @@ func TestGenerateParamCombinations(t *testing.T) {
 
 func TestParameterPrint(t *testing.T) {
 	param := Parameter{
-		ID:                   "test123",
-		GenerationLimit:      10,
-		PopulationSize:       100,
-		ProcreatorSize:       20,
-		DeviationEraInterval: 1,
-		KClosestCs:           3,
-		A:                    1,
-		B:                    1,
-		EtaAr:                400,
-		GammaAr:              10,
-		GammaMgr:             0.9,
-		DatasetIndex:         0,
+		ID:                    "test123",
+		GenerationLimit:       10,
+		PopulationSize:        100,
+		ProcreatorSize:        20,
+		DeviationEraParameter: 1,
+		KClosestCsPercantage:  3,
+		A:                     1,
+		B:                     1,
+		EtaAr:                 400,
+		GammaAr:               10,
+		GammaMgr:              0.9,
+		DatasetIndex:          0,
 	}
 	param.Print()
 }
