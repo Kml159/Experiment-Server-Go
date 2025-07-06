@@ -6,6 +6,8 @@ import (
 	"os"
 
 	"experiment-server/internal/routes"
+	"experiment-server/internal/workers/checker"
+	"experiment-server/internal/workers/reporter"
 )
 
 func main() {
@@ -18,6 +20,9 @@ func main() {
 	log.Println("Verbose logging ENABLED")
 
 	router := routes.NewRouter()
+
+	checker.Check()
+	reporter.Report()
 	
 	log.Printf("Server starting on http://%s", "0.0.0.0:3754")
 	log.Fatal(http.ListenAndServe("0.0.0.0:3754", router))
