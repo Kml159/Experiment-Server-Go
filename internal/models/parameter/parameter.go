@@ -8,7 +8,7 @@ import (
 
 const (
 	base    = 10000
-	product = 1e3
+	product = 1e6
 )
 
 // Arguments needed to run the program:
@@ -41,13 +41,13 @@ func (p Parameter) String() string {
 }
 func GenerateParamCombinations(duplicate int) map[string]Parameter {
 
-	populationSizes := []int{500}
+	populationSizes := []int{1000,500}
 	kClosestCs := []float32{1.0}
 	etaArs := []int{400}
 	gammaArs := []int{10}
 	gammaMgrs := []float64{0.9}
-	datasetIndexes := []int{0}
-	AnB := [][2]int{{1, 1}}
+	datasetIndexes := []int{0, 1, 4}
+	AnB := [][2]int{{1, 1}, {2, 1}, {3, 2}, {3, 3}, {4, 2}, {5, 3}} 
 	DistanceMethod := [2]int{0, 1}
 	DeviationEraParameter := []int{30}
 
