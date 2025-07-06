@@ -109,6 +109,23 @@ func GenerateParamCombinations(duplicate int) map[string]Parameter {
 		finalCombinations = append(finalCombinations, param)
 	}
 
+	for i := range finalCombinations {
+		switch finalCombinations[i].DatasetIndex {
+		case 0: // Default dataset
+			finalCombinations[i].GammaAr = 10
+			finalCombinations[i].GammaMgr = 0.9
+			finalCombinations[i].EtaAr = 400
+		case 1: // Baylands
+			finalCombinations[i].GammaAr = 10
+			finalCombinations[i].GammaMgr = 1.2
+			finalCombinations[i].EtaAr = 600
+		case 4: // Marmaracık
+			finalCombinations[i].GammaAr = 15
+			finalCombinations[i].GammaMgr = 1.2
+			finalCombinations[i].EtaAr = 600
+		}
+	}
+
 	duplicated := make(map[string]Parameter)
 	counter := 0
 	for _, combination := range finalCombinations {
