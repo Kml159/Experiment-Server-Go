@@ -103,6 +103,7 @@ func GenerateParamCombinations(duplicate int) map[string]Parameter {
 			GammaAr:              c.gammaA,
 			GammaMgr:             c.gammaM,
 			DatasetIndex:         c.dset,
+			DistanceMethod: 	  c.dm,
 			DeviatonEraParameter: c.devEra,
 		}
 		finalCombinations = append(finalCombinations, param)

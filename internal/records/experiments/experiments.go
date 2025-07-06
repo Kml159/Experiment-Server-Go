@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	duplicate = 80
+	duplicate = 4
 )
 
 var (
