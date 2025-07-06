@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	duplicate = 4
+	duplicate = 20
 )
 
 var (
