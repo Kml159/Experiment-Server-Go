@@ -110,11 +110,13 @@ func GenerateParamCombinations(duplicate int) map[string]Parameter {
 	}
 
 	duplicated := make(map[string]Parameter)
+	counter := 0
 	for _, combination := range finalCombinations {
 		for i := 0; i < duplicate; i++ {
 			dup := combination
-			dup.ID = combination.ID + fmt.Sprint(i)
+			dup.ID = fmt.Sprintf("%sx%d", fmt.Sprint(ExperimentSessionID*base), counter)
 			duplicated[dup.ID] = dup
+			counter++
 		}
 	}
 
