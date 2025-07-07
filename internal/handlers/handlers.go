@@ -9,6 +9,7 @@ import (
 	"experiment-server/internal/models/output"
 	"experiment-server/internal/records/clients"
 	"experiment-server/internal/records/experiments"
+	"experiment-server/internal/utils"
 	"fmt"
 	"log"
 	"net/http"
@@ -34,7 +35,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	var client client.Client
 	err := json.NewDecoder(r.Body).Decode(&client)
-	client.ComputerAddress = strings.Split(r.RemoteAddr, ":")[0]
+	client.ComputerAddress = utils.ReadUserIP(r)
 	if err != nil {
 		message := "Invalid request body"
 		log.Println(message)
@@ -63,14 +64,14 @@ func GetExperimentHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, err := clients.Get(strings.Split(r.RemoteAddr, ":")[0])
+	_, err := clients.Get(utils.ReadUserIP(r))
 	if err != nil {
-		log.Printf("Unauthorized client: %s.", strings.Split(r.RemoteAddr, ":")[0])
+		log.Printf("Unauthorized client: %s.", utils.ReadUserIP(r))
 		http.Error(w, "Unauthorized client", http.StatusUnauthorized)
 		return
 	}
 
-	address := strings.Split(r.RemoteAddr, ":")[0]
+	address := utils.ReadUserIP(r)
 	clients.Activate(address)
 	experiment := experiments.Subcribe()
 
@@ -88,12 +89,12 @@ func GetExperimentHandler(w http.ResponseWriter, r *http.Request) {
 
 func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 
-	address := strings.Split(r.RemoteAddr, ":")[0]
-
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
+	
+	address := utils.ReadUserIP(r)
 
 	var client client.Client
 	err := json.NewDecoder(r.Body).Decode(&client)
@@ -111,7 +112,7 @@ func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("[%s] Status Updated: [%s]", time.Now().Format(time.RFC3339), address)
-
+	w.WriteHeader(http.StatusOK)
 }
 
 func UploadFileHandler(w http.ResponseWriter, r *http.Request) {
@@ -136,9 +137,9 @@ func UploadFileHandler(w http.ResponseWriter, r *http.Request) {
 
 	ExperimentId := strings.TrimSuffix(strings.Split(parts[1], ".")[0], "")
 
-	clientObj, err := clients.Get(strings.Split(r.RemoteAddr, ":")[0])
+	clientObj, err := clients.Get(utils.ReadUserIP(r))
 	if err != nil {
-		log.Printf("Unauthorized client: %s.", strings.Split(r.RemoteAddr, ":")[0])
+		log.Printf("Unauthorized client: %s.", utils.ReadUserIP(r))
 		http.Error(w, "Unauthorized client", http.StatusUnauthorized)
 		return
 	}
@@ -168,12 +169,16 @@ func UploadFileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := clients.RemoveActiveExperiment(strings.Split(r.RemoteAddr, ":")[0], ExperimentId); err != nil {
+	if err := clients.RemoveActiveExperiment(utils.ReadUserIP(r), ExperimentId); err != nil {
 		log.Printf("Error moving experiment ID %s: %v\n", ExperimentId, err)
+		http.Error(w, "Error moving experiment ID: Requesting reregister", http.StatusUnauthorized)
+		return
 	}
 
 	if err := experiments.Completed(ExperimentId); err != nil {
 		log.Printf("Error on marking experiment as done!")
+		http.Error(w, "Error on marking experiment as done!: Requesting reregister", http.StatusUnauthorized)
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)
