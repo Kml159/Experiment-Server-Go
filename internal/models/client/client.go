@@ -2,6 +2,7 @@ package client
 
 import (
 	"fmt"
+	"log"
 	"time"
 )
 
@@ -19,7 +20,7 @@ type Client struct {
 }
 
 func (c Client) Print() {
-	fmt.Println(c.String())
+	log.Printf(c.String())
 }
 
 func NewClient() Client {

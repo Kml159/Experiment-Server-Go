@@ -3,6 +3,7 @@ package clients
 import (
 	"experiment-server/internal/models/client"
 	"fmt"
+	"log"
 	"sync"
 	"time"
 )
@@ -38,7 +39,7 @@ func Get(key string) (*client.Client, error) {
 func Stats() {
 	mu.Lock()
 	defer mu.Unlock()
-	fmt.Println("Total Clients:", total, "\tActive:", active, "\tInactive:", total-active)
+	log.Printf("Total Clients:", total, "\tActive:", active, "\tInactive:", total-active)
 }
 
 func Count() int {

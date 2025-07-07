@@ -1,7 +1,7 @@
 package reporter
 
 import (
-	"fmt"
+	"log"
 	"time"
 
 	"experiment-server/internal/records/clients"
@@ -18,7 +18,7 @@ func Report() {
 		defer ticker.Stop()
 
 		for range ticker.C {
-			fmt.Printf("[%s] Clients: %d, Unsubscribed Experiments: %d\n",
+			log.Printf("[%s] Clients: %d, Unsubscribed Experiments: %d\n",
 				time.Now().Format("2006-01-02 15:04:05"),
 				clients.Count(),
 				experiments.UnsubscribedCount(),

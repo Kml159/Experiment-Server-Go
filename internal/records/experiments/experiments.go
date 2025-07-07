@@ -3,6 +3,7 @@ package experiments
 import (
 	"experiment-server/internal/models/parameter"
 	"fmt"
+	"log"
 	"sync"
 )
 
@@ -21,7 +22,7 @@ func init() {
 	experiments = parameter.GenerateParamCombinations(duplicate)
 	unsubscribed = make(map[string]*parameter.Parameter, len(experiments))
 	completed = make(map[string]*parameter.Parameter, len(experiments))
-	fmt.Println("Generated experiment parameters:")
+	log.Printf("Generated experiment parameters:")
 	for key, p := range experiments {
 		unsubscribed[key] = &p
 		p.Print()

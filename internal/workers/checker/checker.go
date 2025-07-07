@@ -4,13 +4,13 @@ import (
 	"experiment-server/internal/config"
 	"experiment-server/internal/records/clients"
 	"experiment-server/internal/records/experiments"
-	"fmt"
+	"log"
 	"time"
 )
 
 const (
-	checkerInterval            = 30
-	tolerance                  = 2
+	checkerInterval = 30
+	tolerance       = 2
 )
 
 func Check() {
@@ -33,21 +33,21 @@ func Check() {
 				}
 
 				if time.Since(client.LastStatusReceived) > time.Duration(config.ClientSendUpdateStatusInSeconds*tolerance)*time.Second {
-					fmt.Println("\nClient", client.ComputerName, "is unresponsive. Deactivating from clients list.")
+					log.Printf("Client %s %s", client.ComputerName, "is unresponsive. Deactivating from clients list.")
 
 					err := clients.Deactivate(client.ComputerAddress)
 					if err != nil {
-						fmt.Printf("error deactivating client [%s]: %v\n", client.ComputerAddress, err)
+						log.Printf("error deactivating client [%s]: %v\n", client.ComputerAddress, err)
 						continue
 					}
 
 					lostParams, err := experiments.Parameters(client.ActiveExperimentIDs...)
 					if err != nil {
-						fmt.Printf("error getting experiment parameters for client %s: %v\n", client.ComputerName, err)
+						log.Printf("error getting experiment parameters for client %s: %v\n", client.ComputerName, err)
 						continue
 					}
-					
-					fmt.Printf("Lost parameters added: %+v\n", lostParams)
+
+					log.Printf("Lost parameters added: %+v\n", lostParams)
 					experiments.Add(lostParams...)
 				}
 			}

@@ -1,7 +1,7 @@
 package status
 
 import (
-	"fmt"
+	"log"
 	"time"
 )
 
@@ -14,7 +14,7 @@ func (s Status) GetUpTime() time.Duration {
 }
 
 func (s Status) Print() {
-	fmt.Printf("Status{StartTime: %s, UpTime: %s}\n", s.StartTime.Format("2006-01-02 15:04:05"), s.GetUpTime())
+	log.Printf("Status{StartTime: %s, UpTime: %s}\n", s.StartTime.Format("2006-01-02 15:04:05"), s.GetUpTime())
 }
 
 var ServerStatus Status
