@@ -75,8 +75,8 @@ func GenerateParamCombinations(duplicate int) map[string]Parameter {
 					for _, gammaM := range gammaMgrs {
 						for _, dset := range datasetIndexes {
 							for _, ab := range AnB {
-								for _, dm := range DistanceMethod { // Add this loop
-									for _, devEra := range DeviationEraParameter{
+								for _, dm := range DistanceMethod {
+									for _, devEra := range DeviationEraParameter {
 										combos = append(combos, combo{
 											pop, k, eta, gammaA, gammaM, dset, ab[0], ab[1], dm, devEra,
 										})
@@ -93,7 +93,7 @@ func GenerateParamCombinations(duplicate int) map[string]Parameter {
 	finalCombinations := make([]Parameter, 0, len(combos))
 	for expSetID, c := range combos {
 		param := Parameter{
-			ID:                   fmt.Sprint(ExperimentSessionID*base) + "x" + fmt.Sprint(expSetID),
+			ID:                   fmt.Sprint(ExperimentSessionID*base + expSetID),
 			GenerationLimit:      int(product / float64(c.pop)),
 			PopulationSize:       c.pop,
 			KClosestCsPercantage: c.k,
@@ -103,7 +103,7 @@ func GenerateParamCombinations(duplicate int) map[string]Parameter {
 			GammaAr:              c.gammaA,
 			GammaMgr:             c.gammaM,
 			DatasetIndex:         c.dset,
-			DistanceMethod: 	  c.dm,
+			DistanceMethod:       c.dm,
 			DeviatonEraParameter: c.devEra,
 		}
 		finalCombinations = append(finalCombinations, param)
@@ -131,7 +131,7 @@ func GenerateParamCombinations(duplicate int) map[string]Parameter {
 	for _, combination := range finalCombinations {
 		for i := 0; i < duplicate; i++ {
 			dup := combination
-			dup.ID = fmt.Sprintf("%sx%d", fmt.Sprint(ExperimentSessionID*base), counter)
+			dup.ID = combination.ID + "x" + fmt.Sprintf("%02d", i)
 			duplicated[dup.ID] = dup
 			counter++
 		}
