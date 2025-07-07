@@ -65,8 +65,8 @@ func GetExperimentHandler(w http.ResponseWriter, r *http.Request) {
 
 	_, err := clients.Get(strings.Split(r.RemoteAddr, ":")[0])
 	if err != nil {
-		http.Error(w, "Client is not registered", http.StatusUnauthorized)
-		log.Printf("Unauthorized access attempt from %s: %v\n", r.RemoteAddr, err)
+		log.Printf("Unauthorized client: %s.", strings.Split(r.RemoteAddr, ":")[0])
+		http.Error(w, "Unauthorized client", http.StatusUnauthorized)
 		return
 	}
 
@@ -88,6 +88,8 @@ func GetExperimentHandler(w http.ResponseWriter, r *http.Request) {
 
 func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 
+	address := strings.Split(r.RemoteAddr, ":")[0]
+
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
@@ -100,10 +102,17 @@ func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	client.ComputerAddress = strings.Split(r.RemoteAddr, ":")[0]
-	clients.Update(strings.Split(r.RemoteAddr, ":")[0], &client)
+	client.ComputerAddress = address
+	err = clients.Update(address, &client)
+	if err != nil {
+		log.Printf("Unauthorized client: %s.", address)
+		http.Error(w, "Unauthorized client", http.StatusUnauthorized)
+		return
+	}
 
-	log.Printf("[%s] Status Updated: [%s]", time.Now().Format(time.RFC3339), r.RemoteAddr)}
+	log.Printf("[%s] Status Updated: [%s]", time.Now().Format(time.RFC3339), address)
+
+}
 
 func UploadFileHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
@@ -129,7 +138,8 @@ func UploadFileHandler(w http.ResponseWriter, r *http.Request) {
 
 	clientObj, err := clients.Get(strings.Split(r.RemoteAddr, ":")[0])
 	if err != nil {
-		http.Error(w, "Client not registered", http.StatusUnauthorized)
+		log.Printf("Unauthorized client: %s.", strings.Split(r.RemoteAddr, ":")[0])
+		http.Error(w, "Unauthorized client", http.StatusUnauthorized)
 		return
 	}
 
