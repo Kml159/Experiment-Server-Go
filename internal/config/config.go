@@ -8,6 +8,7 @@ type Config struct {
 	ExperimentBaseId                int
 	SubtractCompletedExperiments    bool
 	ExperimentDuplicate             int
+	ProductGenerationPopulation		int
 }
 
 func Load() *Config {
@@ -18,5 +19,6 @@ func Load() *Config {
 		ExperimentBaseId:                39168127,
 		SubtractCompletedExperiments:    true,
 		ExperimentDuplicate:             20,
+		ProductGenerationPopulation:     1e6,
 	}
 }

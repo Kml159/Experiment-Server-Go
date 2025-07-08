@@ -12,7 +12,6 @@ import (
 
 const (
 	base    = 10000
-	product = 1e6
 )
 
 // Arguments needed to run the program:
@@ -98,7 +97,7 @@ func GenerateParamCombinations(duplicate int, cfg *config.Config) map[string]Par
 	for expSetID, c := range combos {
 		param := Parameter{
 			ID:                   fmt.Sprint(ExperimentSessionID*base + expSetID),
-			GenerationLimit:      int(product / float64(c.pop)),
+			GenerationLimit:      int(float64(cfg.ProductGenerationPopulation) / float64(c.pop)),
 			PopulationSize:       c.pop,
 			KClosestCsPercantage: c.k,
 			A:                    c.a,
