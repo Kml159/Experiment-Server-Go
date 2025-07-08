@@ -8,7 +8,6 @@ import (
 	"sync"
 )
 
-
 var (
 	mu           sync.Mutex
 	experiments  map[string]parameter.Parameter

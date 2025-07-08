@@ -45,13 +45,13 @@ func (p Parameter) String() string {
 }
 func GenerateParamCombinations(duplicate int, cfg *config.Config) map[string]Parameter {
 
-	populationSizes := []int{1000,500}
+	populationSizes := []int{1000, 500}
 	kClosestCs := []float32{1.0}
 	etaArs := []int{400}
 	gammaArs := []int{10}
 	gammaMgrs := []float64{0.9}
 	datasetIndexes := []int{0, 1, 4}
-	AnB := [][2]int{{1, 1}, {2, 1}, {3, 2}, {3, 3}, {4, 2}, {5, 3}} 
+	AnB := [][2]int{{1, 1}, {2, 1}, {3, 2}, {3, 3}, {4, 2}, {5, 3}}
 	DistanceMethod := [2]int{0, 1}
 	DeviationEraParameter := []int{30}
 
@@ -146,18 +146,18 @@ func GenerateParamCombinations(duplicate int, cfg *config.Config) map[string]Par
 
 func SubtractCompleted(experimentsMap *map[string]Parameter, receivedOutputPath string, experimentBaseId int) error {
 
-    files, err := os.ReadDir(receivedOutputPath)
-    if err != nil {
-        return fmt.Errorf("failed to read directory %s: %v", receivedOutputPath, err)
-    }
-    
-    for _, file := range files {
-        if file.IsDir() {
-            continue
-        }
+	files, err := os.ReadDir(receivedOutputPath)
+	if err != nil {
+		return fmt.Errorf("failed to read directory %s: %v", receivedOutputPath, err)
+	}
+
+	for _, file := range files {
+		if file.IsDir() {
+			continue
+		}
 
 		delete(*experimentsMap, strings.Split(strings.Split(file.Name(), "_")[1], ".")[0])
-    }
+	}
 
-    return nil
+	return nil
 }
