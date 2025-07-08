@@ -4,6 +4,7 @@ import (
 	"log"
 	"net/http"
 
+	"experiment-server/internal/config"
 	"experiment-server/internal/handlers"
 )
 
@@ -15,13 +16,26 @@ func loggingMiddleware(next http.Handler) http.Handler {
 }
 
 func NewRouter() http.Handler {
+
+	cfg := config.Load()
+
 	mux := http.NewServeMux()
 
-	mux.HandleFunc("/", handlers.HomeHandler)
-	mux.HandleFunc("/register", handlers.RegisterHandler)
-	mux.HandleFunc("/get_experiment", handlers.GetExperimentHandler)
-	mux.HandleFunc("/update_status", handlers.UpdateStatusHandler)
-	mux.HandleFunc("/upload_file", handlers.UploadFileHandler)
+	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		handlers.HomeHandler(w, r, cfg)
+	})
+	mux.HandleFunc("/register", func(w http.ResponseWriter, r *http.Request) {
+		handlers.RegisterHandler(w, r, cfg)
+	})
+	mux.HandleFunc("/get_experiment", func(w http.ResponseWriter, r *http.Request) {
+		handlers.GetExperimentHandler(w, r, cfg)
+	})
+	mux.HandleFunc("/update_status", func(w http.ResponseWriter, r *http.Request) {
+		handlers.UpdateStatusHandler(w, r, cfg)
+	})
+	mux.HandleFunc("/upload_file", func(w http.ResponseWriter, r *http.Request) {
+		handlers.UploadFileHandler(w, r, cfg)
+	})
 
 	return loggingMiddleware(mux)
 }

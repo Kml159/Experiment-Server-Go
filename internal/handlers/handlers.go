@@ -16,15 +16,13 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 )
 
-func HomeHandler(w http.ResponseWriter, r *http.Request) {
+func HomeHandler(w http.ResponseWriter, r *http.Request, cfg *config.Config) {
 	fmt.Fprintln(w, "Hello, World!")
 }
 
-func RegisterHandler(w http.ResponseWriter, r *http.Request) {
-	config := config.Load()
+func RegisterHandler(w http.ResponseWriter, r *http.Request, cfg *config.Config) {
 
 	if r.Method != http.MethodPost {
 		message := "Method Not Allowed"
@@ -48,8 +46,8 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 
 	response := register.RegisterResponse{
 		Status:                          "Successful",
-		ThreadAmount:                    config.ThreadAmount,
-		ClientSendUpdateStatusInSeconds: config.ClientSendUpdateStatusInSeconds,
+		ThreadAmount:                    cfg.ThreadAmount,
+		ClientSendUpdateStatusInSeconds: cfg.ClientSendUpdateStatusInSeconds,
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -57,7 +55,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func GetExperimentHandler(w http.ResponseWriter, r *http.Request) {
+func GetExperimentHandler(w http.ResponseWriter, r *http.Request, cfg *config.Config) {
 
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
@@ -73,7 +71,7 @@ func GetExperimentHandler(w http.ResponseWriter, r *http.Request) {
 
 	address := utils.ReadUserIP(r)
 	clients.Activate(address)
-	experiment := experiments.Subcribe()
+	experiment := experiments.Subscribe()
 
 	if experiment == nil {
 		http.Error(w, "No experiments available", http.StatusNotFound)
@@ -87,13 +85,13 @@ func GetExperimentHandler(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(*experiment)
 }
 
-func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
+func UpdateStatusHandler(w http.ResponseWriter, r *http.Request, cfg *config.Config) {
 
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	
+
 	address := utils.ReadUserIP(r)
 
 	var client client.Client
@@ -111,11 +109,11 @@ func UpdateStatusHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("[%s] Status Updated: [%s]", time.Now().Format(time.RFC3339), address)
+	log.Printf("Status Updated: [%s]", address)
 	w.WriteHeader(http.StatusOK)
 }
 
-func UploadFileHandler(w http.ResponseWriter, r *http.Request) {
+func UploadFileHandler(w http.ResponseWriter, r *http.Request, cfg *config.Config) {
 	if r.Method != http.MethodPost {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
@@ -158,12 +156,12 @@ func UploadFileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := os.MkdirAll("received_output", 0755); err != nil {
+	if err := os.MkdirAll(cfg.ReceivedOutputFilePath, 0755); err != nil {
 		http.Error(w, "Failed to create output directory", http.StatusInternalServerError)
 		return
 	}
 
-	outputPath := filepath.Join("received_output", file.FileName)
+	outputPath := filepath.Join(cfg.ReceivedOutputFilePath, file.FileName)
 	if err := os.WriteFile(outputPath, data, 0644); err != nil {
 		http.Error(w, "Failed to write file", http.StatusInternalServerError)
 		return

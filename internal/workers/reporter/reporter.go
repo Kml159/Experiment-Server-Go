@@ -18,9 +18,13 @@ func Report() {
 		defer ticker.Stop()
 
 		for range ticker.C {
-			log.Printf("[%s] Clients: %d, Unsubscribed Experiments: %d\n",
-				time.Now().Format("2006-01-02 15:04:05"),
-				clients.Count(),
+			all := clients.Count()
+			active := clients.ActiveClientCount()
+			lost := all - active
+			log.Printf("Clients: [%dT, %dA, %dL], Unsubscribed Experiments: %d\n",
+				all,
+				active,
+				lost,
 				experiments.UnsubscribedCount(),
 			)
 		}

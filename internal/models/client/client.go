@@ -20,7 +20,7 @@ type Client struct {
 }
 
 func (c Client) Print() {
-	log.Printf(c.String())
+	log.Print(c.String())
 }
 
 func NewClient() Client {

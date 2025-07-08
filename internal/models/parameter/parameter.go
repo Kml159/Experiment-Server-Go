@@ -1,8 +1,12 @@
 package parameter
 
 import (
+	"experiment-server/internal/config"
 	"fmt"
+	"log"
 	"math/rand"
+	"os"
+	"strings"
 	"time"
 )
 
@@ -24,22 +28,22 @@ type Parameter struct {
 	GammaAr              int     `json:"gamma_ar"`
 	GammaMgr             float64 `json:"gamma_mgr"`
 	DistanceMethod       int     `json:"distance_method"`
-	DeviatonEraParameter int 	 `json:"deviation_era_parameter"`
+	DeviatonEraParameter int     `json:"deviation_era_parameter"`
 	DatasetIndex         int     `json:"dataset_index"`
 }
 
 func (p Parameter) Print() {
-    fmt.Printf(
-        "Parameter{ID: %s, GenerationLimit: %d, PopulationSize: %d, KClosestCsPercantage: %f, A: %d, B: %d, EtaAr: %d, GammaAr: %d, GammaMgr: %.2f, DistanceMethod: %d, DeviatonEraParameter: %d, DatasetIndex: %d}\n",
-        p.ID, p.GenerationLimit, p.PopulationSize, p.KClosestCsPercantage, p.A, p.B, p.EtaAr, p.GammaAr, p.GammaMgr, p.DistanceMethod, p.DeviatonEraParameter, p.DatasetIndex,
-    )
+	log.Printf(
+		"Parameter{ID: %s, GenerationLimit: %d, PopulationSize: %d, KClosestCsPercantage: %f, A: %d, B: %d, EtaAr: %d, GammaAr: %d, GammaMgr: %.2f, DistanceMethod: %d, DeviatonEraParameter: %d, DatasetIndex: %d}\n",
+		p.ID, p.GenerationLimit, p.PopulationSize, p.KClosestCsPercantage, p.A, p.B, p.EtaAr, p.GammaAr, p.GammaMgr, p.DistanceMethod, p.DeviatonEraParameter, p.DatasetIndex,
+	)
 }
 
 func (p Parameter) String() string {
-    return fmt.Sprintf("Parameter{ID: %s, GenerationLimit: %d, PopulationSize: %d, KClosestCsPercantage: %f, A: %d, B: %d, EtaAr: %d, GammaAr: %d, GammaMgr: %.2f, DistanceMethod: %d, DeviatonEraParameter: %d, DatasetIndex: %d}\n",
-        p.ID, p.GenerationLimit, p.PopulationSize, p.KClosestCsPercantage, p.A, p.B, p.EtaAr, p.GammaAr, p.GammaMgr, p.DistanceMethod, p.DeviatonEraParameter, p.DatasetIndex)
+	return fmt.Sprintf("Parameter{ID: %s, GenerationLimit: %d, PopulationSize: %d, KClosestCsPercantage: %f, A: %d, B: %d, EtaAr: %d, GammaAr: %d, GammaMgr: %.2f, DistanceMethod: %d, DeviatonEraParameter: %d, DatasetIndex: %d}\n",
+		p.ID, p.GenerationLimit, p.PopulationSize, p.KClosestCsPercantage, p.A, p.B, p.EtaAr, p.GammaAr, p.GammaMgr, p.DistanceMethod, p.DeviatonEraParameter, p.DatasetIndex)
 }
-func GenerateParamCombinations(duplicate int) map[string]Parameter {
+func GenerateParamCombinations(duplicate int, cfg *config.Config) map[string]Parameter {
 
 	populationSizes := []int{1000,500}
 	kClosestCs := []float32{1.0}
@@ -52,7 +56,7 @@ func GenerateParamCombinations(duplicate int) map[string]Parameter {
 	DeviationEraParameter := []int{30}
 
 	rand.Seed(time.Now().UnixNano())
-	ExperimentSessionID := rand.Intn(100000) * 10000
+	ExperimentSessionID := cfg.ExperimentBaseId * 10000
 
 	type combo struct {
 		pop    int
@@ -138,4 +142,22 @@ func GenerateParamCombinations(duplicate int) map[string]Parameter {
 	}
 
 	return duplicated
+}
+
+func SubtractCompleted(experimentsMap *map[string]Parameter, receivedOutputPath string, experimentBaseId int) error {
+
+    files, err := os.ReadDir(receivedOutputPath)
+    if err != nil {
+        return fmt.Errorf("failed to read directory %s: %v", receivedOutputPath, err)
+    }
+    
+    for _, file := range files {
+        if file.IsDir() {
+            continue
+        }
+
+		delete(*experimentsMap, strings.Split(strings.Split(file.Name(), "_")[1], ".")[0])
+    }
+
+    return nil
 }

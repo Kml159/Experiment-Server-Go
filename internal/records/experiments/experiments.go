@@ -1,15 +1,13 @@
 package experiments
 
 import (
+	"experiment-server/internal/config"
 	"experiment-server/internal/models/parameter"
 	"fmt"
 	"log"
 	"sync"
 )
 
-const (
-	duplicate = 20
-)
 
 var (
 	mu           sync.Mutex
@@ -18,8 +16,20 @@ var (
 	completed    map[string]*parameter.Parameter
 )
 
-func init() {
-	experiments = parameter.GenerateParamCombinations(duplicate)
+func Initialize(cfg *config.Config) {
+	experiments = parameter.GenerateParamCombinations(cfg.ExperimentDuplicate, cfg)
+
+	if cfg.SubtractCompletedExperiments {
+		err := parameter.SubtractCompleted(&experiments, cfg.ReceivedOutputFilePath, cfg.ExperimentBaseId)
+		if err != nil {
+			log.Printf("Error subtracting completed experiments: %v", err)
+		}
+	}
+
+	for experiment := range experiments {
+		log.Println(experiment)
+	}
+
 	unsubscribed = make(map[string]*parameter.Parameter, len(experiments))
 	completed = make(map[string]*parameter.Parameter, len(experiments))
 	log.Printf("Generated experiment parameters:")
@@ -47,7 +57,7 @@ func Add(params ...parameter.Parameter) {
 	}
 }
 
-func Subcribe() *parameter.Parameter {
+func Subscribe() *parameter.Parameter {
 	mu.Lock()
 	defer mu.Unlock()
 	for id, param := range unsubscribed {

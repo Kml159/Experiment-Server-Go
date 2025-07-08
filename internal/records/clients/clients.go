@@ -39,7 +39,7 @@ func Get(key string) (*client.Client, error) {
 func Stats() {
 	mu.Lock()
 	defer mu.Unlock()
-	log.Printf("Total Clients:", total, "\tActive:", active, "\tInactive:", total-active)
+	log.Printf("Total Clients: %d\tActive: %d\tInactive: %d", total, active, total-active)
 }
 
 func Count() int {
@@ -48,7 +48,6 @@ func Count() int {
 	return len(byAddress)
 }
 
-// TODO: fix
 func Deactivate(key string) error {
 	mu.Lock()
 	defer mu.Unlock()
@@ -135,4 +134,10 @@ func Clients() []client.Client {
 		clients = append(clients, *c)
 	}
 	return clients
+}
+
+func ActiveClientCount() int {
+	mu.Lock()
+	defer mu.Unlock()
+	return active
 }
