@@ -45,6 +45,12 @@ func UnsubscribedCount() int {
 	return len(unsubscribed)
 }
 
+func AllCount() int {
+	mu.Lock()
+	defer mu.Unlock()
+	return len(experiments)
+}
+
 func Add(params ...parameter.Parameter) {
 	mu.Lock()
 	defer mu.Unlock()

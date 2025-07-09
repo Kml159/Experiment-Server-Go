@@ -4,10 +4,8 @@ import (
 	"experiment-server/internal/config"
 	"fmt"
 	"log"
-	"math/rand"
 	"os"
 	"strings"
-	"time"
 )
 
 const (
@@ -29,32 +27,36 @@ type Parameter struct {
 	DistanceMethod       int     `json:"distance_method"`
 	DeviatonEraParameter int     `json:"deviation_era_parameter"`
 	DatasetIndex         int     `json:"dataset_index"`
+	IsMultiModal		 int 	 `json:"is_multi_modal"`
+    Done                 bool    `json:"-"`
 }
 
 func (p Parameter) Print() {
 	log.Printf(
-		"Parameter{ID: %s, GenerationLimit: %d, PopulationSize: %d, KClosestCsPercantage: %f, A: %d, B: %d, EtaAr: %d, GammaAr: %d, GammaMgr: %.2f, DistanceMethod: %d, DeviatonEraParameter: %d, DatasetIndex: %d}\n",
-		p.ID, p.GenerationLimit, p.PopulationSize, p.KClosestCsPercantage, p.A, p.B, p.EtaAr, p.GammaAr, p.GammaMgr, p.DistanceMethod, p.DeviatonEraParameter, p.DatasetIndex,
+		"Parameter{ID: %s, GenerationLimit: %d, PopulationSize: %d, KClosestCsPercantage: %f, A: %d, B: %d, EtaAr: %d, GammaAr: %d, GammaMgr: %.2f, DistanceMethod: %d, DeviatonEraParameter: %d, DatasetIndex: %d, IsMultiModal: %d}\n",
+		p.ID, p.GenerationLimit, p.PopulationSize, p.KClosestCsPercantage, p.A, p.B, p.EtaAr, p.GammaAr, p.GammaMgr, p.DistanceMethod, p.DeviatonEraParameter, p.DatasetIndex, p.IsMultiModal,
 	)
 }
 
 func (p Parameter) String() string {
-	return fmt.Sprintf("Parameter{ID: %s, GenerationLimit: %d, PopulationSize: %d, KClosestCsPercantage: %f, A: %d, B: %d, EtaAr: %d, GammaAr: %d, GammaMgr: %.2f, DistanceMethod: %d, DeviatonEraParameter: %d, DatasetIndex: %d}\n",
-		p.ID, p.GenerationLimit, p.PopulationSize, p.KClosestCsPercantage, p.A, p.B, p.EtaAr, p.GammaAr, p.GammaMgr, p.DistanceMethod, p.DeviatonEraParameter, p.DatasetIndex)
+	return fmt.Sprintf("Parameter{ID: %s, GenerationLimit: %d, PopulationSize: %d, KClosestCsPercantage: %f, A: %d, B: %d, EtaAr: %d, GammaAr: %d, GammaMgr: %.2f, DistanceMethod: %d, DeviatonEraParameter: %d, DatasetIndex: %d, IsMultiModal: %d}\n",
+		p.ID, p.GenerationLimit, p.PopulationSize, p.KClosestCsPercantage, p.A, p.B, p.EtaAr, p.GammaAr, p.GammaMgr, p.DistanceMethod, p.DeviatonEraParameter, p.DatasetIndex, p.IsMultiModal,
+	)
 }
+
 func GenerateParamCombinations(duplicate int, cfg *config.Config) map[string]Parameter {
 
-	populationSizes := []int{1000, 500}
+	populationSizes := []int{500, 250}
 	kClosestCs := []float32{1.0}
 	etaArs := []int{400}
 	gammaArs := []int{10}
 	gammaMgrs := []float64{0.9}
 	datasetIndexes := []int{0, 1, 4}
 	AnB := [][2]int{{1, 1}, {2, 1}, {3, 2}, {3, 3}, {4, 2}, {5, 3}}
-	DistanceMethod := [2]int{0, 1}
-	DeviationEraParameter := []int{30}
+	DistanceMethod := []int{1}
+	DeviationEraParameter := []int{-1, 30}
+	IsMultiModal := []int{0, 1}
 
-	rand.Seed(time.Now().UnixNano())
 	ExperimentSessionID := cfg.ExperimentBaseId * 10000
 
 	type combo struct {
@@ -68,6 +70,7 @@ func GenerateParamCombinations(duplicate int, cfg *config.Config) map[string]Par
 		b      int
 		dm     int
 		devEra int
+		IsMultiModal int
 	}
 
 	var combos []combo
@@ -80,9 +83,11 @@ func GenerateParamCombinations(duplicate int, cfg *config.Config) map[string]Par
 							for _, ab := range AnB {
 								for _, dm := range DistanceMethod {
 									for _, devEra := range DeviationEraParameter {
-										combos = append(combos, combo{
-											pop, k, eta, gammaA, gammaM, dset, ab[0], ab[1], dm, devEra,
-										})
+										for _, isMulti := range IsMultiModal {
+											combos = append(combos, combo{
+												pop, k, eta, gammaA, gammaM, dset, ab[0], ab[1], dm, devEra, isMulti,
+											})
+										}
 									}
 								}
 							}
@@ -108,6 +113,7 @@ func GenerateParamCombinations(duplicate int, cfg *config.Config) map[string]Par
 			DatasetIndex:         c.dset,
 			DistanceMethod:       c.dm,
 			DeviatonEraParameter: c.devEra,
+			IsMultiModal: 		  c.IsMultiModal,
 		}
 		finalCombinations = append(finalCombinations, param)
 	}
@@ -125,7 +131,7 @@ func GenerateParamCombinations(duplicate int, cfg *config.Config) map[string]Par
 		case 4: // Marmaracık
 			finalCombinations[i].GammaAr = 15
 			finalCombinations[i].GammaMgr = 1.2
-			finalCombinations[i].EtaAr = 600
+			finalCombinations[i].EtaAr = 1200
 		}
 	}
 
