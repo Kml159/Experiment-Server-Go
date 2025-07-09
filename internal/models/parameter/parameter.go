@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	base    = 10000
+	base = 10000
 )
 
 // Arguments needed to run the program:
@@ -27,8 +27,8 @@ type Parameter struct {
 	DistanceMethod       int     `json:"distance_method"`
 	DeviatonEraParameter int     `json:"deviation_era_parameter"`
 	DatasetIndex         int     `json:"dataset_index"`
-	IsMultiModal		 int 	 `json:"is_multi_modal"`
-    Done                 bool    `json:"-"`
+	IsMultiModal         int     `json:"is_multi_modal"`
+	Done                 bool    `json:"-"`
 }
 
 func (p Parameter) Print() {
@@ -60,16 +60,16 @@ func GenerateParamCombinations(duplicate int, cfg *config.Config) map[string]Par
 	ExperimentSessionID := cfg.ExperimentBaseId * 10000
 
 	type combo struct {
-		pop    int
-		k      float32
-		eta    int
-		gammaA int
-		gammaM float64
-		dset   int
-		a      int
-		b      int
-		dm     int
-		devEra int
+		pop          int
+		k            float32
+		eta          int
+		gammaA       int
+		gammaM       float64
+		dset         int
+		a            int
+		b            int
+		dm           int
+		devEra       int
 		IsMultiModal int
 	}
 
@@ -113,7 +113,7 @@ func GenerateParamCombinations(duplicate int, cfg *config.Config) map[string]Par
 			DatasetIndex:         c.dset,
 			DistanceMethod:       c.dm,
 			DeviatonEraParameter: c.devEra,
-			IsMultiModal: 		  c.IsMultiModal,
+			IsMultiModal:         c.IsMultiModal,
 		}
 		finalCombinations = append(finalCombinations, param)
 	}

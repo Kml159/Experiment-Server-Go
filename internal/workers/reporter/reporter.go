@@ -25,7 +25,7 @@ func Report() {
 			unsubscribedExperiments := experiments.UnsubscribedCount()
 			allExperiments := experiments.AllCount()
 			subscribedExperiments := allExperiments - unsubscribedExperiments
-			log.Printf("Clients: [%dT: %dA, %dL], Experiments: [%dA: %dU, %dS]\n",
+			log.Printf("Clients: [%dT: %dA, %dL], Experiments: [%dT: %dU, %dS]\n",
 				all,
 				active,
 				lost,

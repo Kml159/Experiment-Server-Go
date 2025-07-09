@@ -8,7 +8,7 @@ type Config struct {
 	ExperimentBaseId                int
 	SubtractCompletedExperiments    bool
 	ExperimentDuplicate             int
-	ProductGenerationPopulation		int
+	ProductGenerationPopulation     int
 }
 
 func Load() *Config {
