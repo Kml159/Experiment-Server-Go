@@ -45,6 +45,12 @@ func UnsubscribedCount() int {
 	return len(unsubscribed)
 }
 
+func CompletedCount() int {
+	mu.Lock()
+	defer mu.Unlock()
+	return len(completed)
+}
+
 func AllCount() int {
 	mu.Lock()
 	defer mu.Unlock()
@@ -81,6 +87,7 @@ func Completed(key string) error {
 		return fmt.Errorf("experiment %q not found", key)
 	}
 	completed[key] = &exp
+	exp.Done = true
 	return nil
 }
 

@@ -46,18 +46,19 @@ func (p Parameter) String() string {
 
 func GenerateParamCombinations(duplicate int, cfg *config.Config) map[string]Parameter {
 
+	// Cartesian elements
 	populationSizes := []int{500, 250}
-	kClosestCs := []float32{1.0}
-	etaArs := []int{400}
+	kClosestCs := []float32{1.0}									// Ignore
+	etaArs := []int{1200}
 	gammaArs := []int{10}
-	gammaMgrs := []float64{0.9}
-	datasetIndexes := []int{0, 1, 4}
-	AnB := [][2]int{{1, 1}, {2, 1}, {3, 2}, {3, 3}, {4, 2}, {5, 3}}
-	DistanceMethod := []int{1}
-	DeviationEraParameter := []int{-1, 30}
-	IsMultiModal := []int{0, 1}
+	gammaMgrs := []float64{1.0}
+	datasetIndexes := []int{0, 2, 5}                                // 0: Kilyos, 1: Baylands, 2: Baylands2408, 3: - , 4: Marmaracık, 5: Marmaracık4096
+	AnB := [][2]int{{1, 1}, {2, 1}, {3, 2}, {3, 3}, {4, 2}, {5, 3}} // Ar to Mgr
+	DistanceMethod := []int{1}                                      // 0: Normal, 1: Alternative
+	DeviationEraParameter := []int{-1, 30}                          // -1: No Dev Era, 30: Normal
+	IsMultiModal := []int{0, 1}										// 0: N-Best, 1: MultiModal
 
-	ExperimentSessionID := cfg.ExperimentBaseId * 10000
+	ExperimentSessionID := cfg.ExperimentBaseId * base
 
 	type combo struct {
 		pop          int
@@ -114,6 +115,7 @@ func GenerateParamCombinations(duplicate int, cfg *config.Config) map[string]Par
 			DistanceMethod:       c.dm,
 			DeviatonEraParameter: c.devEra,
 			IsMultiModal:         c.IsMultiModal,
+			Done: 				  false,
 		}
 		finalCombinations = append(finalCombinations, param)
 	}

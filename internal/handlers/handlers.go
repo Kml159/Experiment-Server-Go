@@ -41,11 +41,10 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request, cfg *config.Config)
 		return
 	}
 
-	contains := clients.Contains(client.ComputerAddress)
-	if contains {
+	if clients.Contains(client.ComputerAddress) {
 		log.Printf("This client already registered")
 	} else {
-		log.Printf("Appending client: %s", client.String())
+		log.Printf("Appending new client: %s", client.String())
 		clients.Add(&client)
 	}
 
