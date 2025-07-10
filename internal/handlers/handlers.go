@@ -9,7 +9,6 @@ import (
 	"experiment-server/internal/models/output"
 	"experiment-server/internal/records/clients"
 	"experiment-server/internal/records/experiments"
-	"experiment-server/internal/utils"
 	"fmt"
 	"log"
 	"net/http"
@@ -33,7 +32,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request, cfg *config.Config)
 
 	var client client.Client
 	err := json.NewDecoder(r.Body).Decode(&client)
-	client.ComputerAddress = utils.ReadUserIP(r)
+	client.ComputerAddress = r.RemoteAddr
 	if err != nil {
 		message := "Invalid request body"
 		log.Println(message)
@@ -41,7 +40,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request, cfg *config.Config)
 		return
 	}
 
-	if clients.Contains(client.ComputerAddress) {
+	if clients.Contains(client.ComputerName) {
 		log.Printf("This client already registered")
 	} else {
 		log.Printf("Appending new client: %s", client.String())
@@ -66,15 +65,15 @@ func GetExperimentHandler(w http.ResponseWriter, r *http.Request, cfg *config.Co
 		return
 	}
 
-	_, err := clients.Get(utils.ReadUserIP(r))
+	_, err := clients.Get(r.Header.Get("ComputerName"))
 	if err != nil {
-		log.Printf("Unauthorized client: %s.", utils.ReadUserIP(r))
+		log.Printf("Unauthorized client: %s.", r.RemoteAddr)
 		http.Error(w, "Unauthorized client", http.StatusUnauthorized)
 		return
 	}
 
-	address := utils.ReadUserIP(r)
-	clients.Activate(address)
+	ComputerName := r.Header.Get("ComputerName")
+	clients.Activate(ComputerName)
 	experiment := experiments.Subscribe()
 
 	if experiment == nil {
@@ -82,7 +81,7 @@ func GetExperimentHandler(w http.ResponseWriter, r *http.Request, cfg *config.Co
 		return
 	}
 
-	clients.AppendActiveExperiment(address, experiment.ID)
+	clients.AppendActiveExperiment(ComputerName, experiment.ID)
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
@@ -96,8 +95,6 @@ func UpdateStatusHandler(w http.ResponseWriter, r *http.Request, cfg *config.Con
 		return
 	}
 
-	address := utils.ReadUserIP(r)
-
 	var client client.Client
 	err := json.NewDecoder(r.Body).Decode(&client)
 	if err != nil {
@@ -105,15 +102,15 @@ func UpdateStatusHandler(w http.ResponseWriter, r *http.Request, cfg *config.Con
 		return
 	}
 
-	client.ComputerAddress = address
-	err = clients.Update(address, &client)
+	client.ComputerAddress = r.RemoteAddr
+	err = clients.Update(client.ComputerName, &client)
 	if err != nil {
-		log.Printf("Unauthorized client: %s.", address)
+		log.Printf("Unauthorized client: %s.", client.ComputerName)
 		http.Error(w, "Unauthorized client", http.StatusUnauthorized)
 		return
 	}
 
-	log.Printf("Status Updated: [%s]", address)
+	log.Printf("Status Updated: [%s]", client.ComputerName)
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -139,9 +136,9 @@ func UploadFileHandler(w http.ResponseWriter, r *http.Request, cfg *config.Confi
 
 	ExperimentId := strings.TrimSuffix(strings.Split(parts[1], ".")[0], "")
 
-	clientObj, err := clients.Get(utils.ReadUserIP(r))
+	clientObj, err := clients.Get(r.Header.Get("ComputerName"))
 	if err != nil {
-		log.Printf("Unauthorized client: %s.", utils.ReadUserIP(r))
+		log.Printf("Unauthorized client: %s.", r.RemoteAddr)
 		http.Error(w, "Unauthorized client", http.StatusUnauthorized)
 		return
 	}
@@ -171,7 +168,7 @@ func UploadFileHandler(w http.ResponseWriter, r *http.Request, cfg *config.Confi
 		return
 	}
 
-	if err := clients.RemoveActiveExperiment(utils.ReadUserIP(r), ExperimentId); err != nil {
+	if err := clients.RemoveActiveExperiment(r.Header.Get("ComputerName"), ExperimentId); err != nil {
 		log.Printf("Error moving experiment ID %s: %v\n", ExperimentId, err)
 		http.Error(w, "Error moving experiment ID: Requesting reregister", http.StatusUnauthorized)
 		return

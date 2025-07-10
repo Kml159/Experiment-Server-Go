@@ -10,7 +10,7 @@ import (
 
 var (
 	mu        sync.Mutex
-	byAddress = make(map[string]*client.Client)
+	clientMap = make(map[string]*client.Client)
 	total     int
 	active    int
 )
@@ -18,7 +18,7 @@ var (
 func Add(c *client.Client) error {
 	mu.Lock()
 	defer mu.Unlock()
-	byAddress[c.ComputerAddress] = c
+	clientMap[c.ComputerName] = c
 	total++
 	if c.IsActive {
 		active++
@@ -29,7 +29,7 @@ func Add(c *client.Client) error {
 func Get(key string) (*client.Client, error) {
 	mu.Lock()
 	defer mu.Unlock()
-	c, ok := byAddress[key]
+	c, ok := clientMap[key]
 	if !ok {
 		return nil, fmt.Errorf("client not found: %s", key)
 	}
@@ -45,13 +45,13 @@ func Stats() {
 func Count() int {
 	mu.Lock()
 	defer mu.Unlock()
-	return len(byAddress)
+	return len(clientMap)
 }
 
 func Deactivate(key string) error {
 	mu.Lock()
 	defer mu.Unlock()
-	c, ok := byAddress[key]
+	c, ok := clientMap[key]
 	if !ok {
 		return fmt.Errorf("client not found: %s", key)
 	}
@@ -66,7 +66,7 @@ func Deactivate(key string) error {
 func Activate(key string) error {
 	mu.Lock()
 	defer mu.Unlock()
-	c, ok := byAddress[key]
+	c, ok := clientMap[key]
 	if !ok {
 		return fmt.Errorf("client not found: %s", key)
 	}
@@ -81,27 +81,27 @@ func Activate(key string) error {
 func Contains(key string) bool {
 	mu.Lock()
 	defer mu.Unlock()
-	_, ok := byAddress[key]
+	_, ok := clientMap[key]
 	return ok
 }
 
-func AppendActiveExperiment(ClientAddress string, ExperimentId string) error {
+func AppendActiveExperiment(key string, ExperimentId string) error {
 	mu.Lock()
 	defer mu.Unlock()
-	client, ok := byAddress[ClientAddress]
+	client, ok := clientMap[key]
 	if !ok {
-		return fmt.Errorf("Client Address does not exists: " + ClientAddress)
+		return fmt.Errorf("Client Address does not exists: " + key)
 	}
 	client.ActiveExperimentIDs = append(client.ActiveExperimentIDs, ExperimentId)
 	return nil
 }
 
-func RemoveActiveExperiment(ClientAddress string, ExperimentId string) error {
+func RemoveActiveExperiment(key string, ExperimentId string) error {
 	mu.Lock()
 	defer mu.Unlock()
-	client, ok := byAddress[ClientAddress]
+	client, ok := clientMap[key]
 	if !ok {
-		return fmt.Errorf("client Address does not exist: %s", ClientAddress)
+		return fmt.Errorf("client Address does not exist: %s", key)
 	}
 	ids := client.ActiveExperimentIDs
 	for i, id := range ids {
@@ -114,23 +114,23 @@ func RemoveActiveExperiment(ClientAddress string, ExperimentId string) error {
 	return fmt.Errorf("experiment ID not found: %s", ExperimentId)
 }
 
-func Update(ClientAddress string, client *client.Client) error {
+func Update(key string, client *client.Client) error {
 	mu.Lock()
 	defer mu.Unlock()
-	_, ok := byAddress[ClientAddress]
+	_, ok := clientMap[key]
 	if !ok {
-		return fmt.Errorf("client Address does not exist: %s", ClientAddress)
+		return fmt.Errorf("client Address does not exist: %s", key)
 	}
 	client.LastStatusReceived = time.Now()
-	byAddress[ClientAddress] = client
+	clientMap[key] = client
 	return nil
 }
 
 func Clients() []client.Client {
 	mu.Lock()
 	defer mu.Unlock()
-	clients := make([]client.Client, 0, len(byAddress))
-	for _, c := range byAddress {
+	clients := make([]client.Client, 0, len(clientMap))
+	for _, c := range clientMap {
 		clients = append(clients, *c)
 	}
 	return clients
