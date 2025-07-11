@@ -61,6 +61,7 @@ func RegisterHandler(w http.ResponseWriter, r *http.Request, cfg *config.Config)
 func GetExperimentHandler(w http.ResponseWriter, r *http.Request, cfg *config.Config) {
 
 	if r.Method != http.MethodGet {
+		log.Printf("Method Not Allowed: %s", r.Method)
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
@@ -77,6 +78,7 @@ func GetExperimentHandler(w http.ResponseWriter, r *http.Request, cfg *config.Co
 	experiment := experiments.Subscribe()
 
 	if experiment == nil {
+		log.Printf("No experiments available for client: %s", r.Header.Get("ComputerName"))
 		http.Error(w, "No experiments available", http.StatusNotFound)
 		return
 	}
@@ -91,6 +93,7 @@ func GetExperimentHandler(w http.ResponseWriter, r *http.Request, cfg *config.Co
 func UpdateStatusHandler(w http.ResponseWriter, r *http.Request, cfg *config.Config) {
 
 	if r.Method != http.MethodPost {
+		log.Printf("Method Not Allowed: %s", r.Method)
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
@@ -98,6 +101,7 @@ func UpdateStatusHandler(w http.ResponseWriter, r *http.Request, cfg *config.Con
 	var client client.Client
 	err := json.NewDecoder(r.Body).Decode(&client)
 	if err != nil {
+		log.Printf("Invalid request body: %v", err)
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
@@ -116,12 +120,14 @@ func UpdateStatusHandler(w http.ResponseWriter, r *http.Request, cfg *config.Con
 
 func UploadFileHandler(w http.ResponseWriter, r *http.Request, cfg *config.Config) {
 	if r.Method != http.MethodPost {
+		log.Printf("Method Not Allowed: %s", r.Method)
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
 	var file output.Output
 	if err := json.NewDecoder(r.Body).Decode(&file); err != nil {
+		log.Printf("Invalid request body: %v", err)
 		http.Error(w, "Invalid request body", http.StatusBadRequest)
 		return
 	}
@@ -130,6 +136,7 @@ func UploadFileHandler(w http.ResponseWriter, r *http.Request, cfg *config.Confi
 
 	parts := strings.Split(file.FileName, "_")
 	if len(parts) < 2 {
+		log.Printf("Invalid file name format: %s", file.FileName)
 		http.Error(w, "Invalid file name format", http.StatusBadRequest)
 		return
 	}
@@ -146,6 +153,7 @@ func UploadFileHandler(w http.ResponseWriter, r *http.Request, cfg *config.Confi
 	for _, id := range clientObj.CompletedExperimentIDs {
 		if id == ExperimentId {
 			w.WriteHeader(http.StatusOK)
+			log.Printf("File already received for experiment ID: %s from client: %s", ExperimentId, r.Header.Get("ComputerName"))
 			json.NewEncoder(w).Encode(map[string]string{"status": "File already received"})
 			return
 		}
@@ -153,17 +161,20 @@ func UploadFileHandler(w http.ResponseWriter, r *http.Request, cfg *config.Confi
 
 	data, err := base64.StdEncoding.DecodeString(file.FileData)
 	if err != nil {
+		log.Printf("Failed to decode file data for file %s: %v", file.FileName, err)
 		http.Error(w, "Failed to decode file data", http.StatusBadRequest)
 		return
 	}
 
 	if err := os.MkdirAll(cfg.ReceivedOutputFilePath, 0755); err != nil {
+		log.Printf("Failed to create output directory %s: %v", cfg.ReceivedOutputFilePath, err)
 		http.Error(w, "Failed to create output directory", http.StatusInternalServerError)
 		return
 	}
 
 	outputPath := filepath.Join(cfg.ReceivedOutputFilePath, file.FileName)
 	if err := os.WriteFile(outputPath, data, 0644); err != nil {
+		log.Printf("Failed to write file %s: %v", outputPath, err)
 		http.Error(w, "Failed to write file", http.StatusInternalServerError)
 		return
 	}

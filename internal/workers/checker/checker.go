@@ -35,9 +35,9 @@ func Check() {
 				if time.Since(client.LastStatusReceived) > time.Duration(config.ClientSendUpdateStatusInSeconds*tolerance)*time.Second {
 					log.Printf("Client %s %s", client.ComputerName, "is unresponsive. Deactivating from clients list.")
 
-					err := clients.Deactivate(client.ComputerAddress)
+					err := clients.Deactivate(client.ComputerName)
 					if err != nil {
-						log.Printf("error deactivating client [%s]: %v\n", client.ComputerAddress, err)
+						log.Printf("error deactivating client [%s]: %v\n", client.ComputerName, err)
 						continue
 					}
 
